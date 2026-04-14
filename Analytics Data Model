@@ -1,0 +1,6 @@
+[dim_location]           [dim_call_type]
+      |                        |
+(location_key)           (call_type_key)
+      |________________________|
+                   |
+        [fact_service_calls]
