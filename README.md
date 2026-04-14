@@ -1,44 +1,26 @@
-# SFFD Service Calls Data Platform
+# SFFD Service Calls Data Platform Implementation
 
-## 1. Project Overview
-This repository contains the technical implementation of a cloud-based data platform for the San Francisco Fire Department (SFFD) service call datasets. The solution addresses the end-to-end data lifecycle: from raw daily extracts to an analytics-ready dimensional model.
+## 🚀 Project Overview
+This project establishes a robust, automated data platform on **Google Cloud Platform** for analyzing San Francisco Fire Department (SFFD) service calls. The solution transforms fragmented daily extracts into a high-performance analytics data mart.
 
-## 2. Architecture Design (Deliverable 1)
-The platform is built on **Google Cloud Platform (GCP)**, leveraging a modern ELT (Extract, Load, Transform) architecture.
+## 🏗️ Architecture (Deliverable 1 & 2)
+- **Ingestion:** GCS Landing Zone -> BigQuery Staging.
+- **Transformation:** BigQuery SQL (ELT).
+- **Modeling:** Star Schema (1 Fact, 2 Dimensions).
+- **Automation:** Event-driven ingestion and Scheduled Query transformations.
 
-*   **Ingestion Layer:** Google Cloud Storage (GCS) serves as the landing zone. Automated ingestion is triggered by file arrival notifications.
-*   **Transformation Layer:** BigQuery serves as the compute engine for data cleaning, deduplication, and modeling.
-*   **Analytics Layer:** A Star Schema data mart designed for high-performance reporting.
+## 🛠️ Data Engineering Features
+- **Schema Resilience:** Explicitly handles data type drift in source files (Numeric vs. String) via casting in the ingestion layer.
+- **Deduplication:** Implements an idempotent `ROW_NUMBER()` strategy to maintain a single "source of truth" for each incident.
+- **Performance:** Optimized joins using `FARM_FINGERPRINT` integer surrogate keys instead of string-based joins.
 
-## 3. Data Ingestion & Exchange (Deliverable 2)
-*   **Location:** `gs://sffd-daily-extracts/` (Google Cloud Storage)
-*   **Mechanism:** Event-driven architecture. A Cloud Function monitors the bucket and triggers a BigQuery Load Job upon file finalization, ensuring **zero manual intervention**.
+## 📊 Analytics Model (Deliverable 4)
+- **Fact Table:** `fact_service_calls` (Grain: 1 row per incident).
+- **Dimensions:** `dim_location` (Neighborhoods), `dim_call_type` (Incident Categories).
+- **KPIs:** Response Time (Seconds), Dispatch Delay, and Daily Activity Volume.
 
-## 4. Data Pipeline (Deliverable 3)
-The pipeline handles two primary technical challenges:
-1.  **Schema Consistency:** Explicit `CAST` logic is implemented to standardize inconsistent data types (e.g., `fire_prevention_district`) across daily extracts.
-2.  **Deduplication:** Implemented using a `QUALIFY ROW_NUMBER()` window function to ensure idempotency—only the latest record version is promoted to the analytics layer.
-
-## 5. Analytics Data Model (Deliverable 4)
-The data is modeled into a **Star Schema** to support rapid analysis of response times and call volumes.
-
-### Tables:
-*   **`fact_service_calls`**: Central metrics table (Grain: 1 row per unique service call).
-*   **`dim_location`**: Geographic dimensions (Neighborhood, Zipcode).
-*   **`dim_call_type`**: Service call categorization (Type, Group).
-
-### Key Performance Indicators (KPIs):
-*   **Response Time:** Time from call received to unit on-scene.
-*   **Call Volume:** Daily aggregation of service requests.
-
-## 6. Documentation (Deliverable 5)
-Detailed SQL scripts for the implementation are located in the `/sql` directory:
-*   `01_raw_ingestion.sql`: Consolidates and fixes daily extracts.
-*   `02_star_schema.sql`: Builds the dimensional model.
-*   `03_quality_checks.sql`: Validates record counts and data integrity.
-
-## 7. Quality Strategy
-Validation checks are performed at the end of each pipeline run:
-*   **Completeness:** Checks for NULLs in critical columns.
-*   **Uniqueness:** Validates that the Fact table contains zero duplicate `call_number` entries.
-*   **Accuracy:** Sample calculation of average response times against raw source benchmarks.
+## ✅ Data Quality (Deliverable 5)
+Continuous validation ensures:
+- Zero duplicate `call_number` entries.
+- 100% join coverage between Fact and Dimension layers.
+- Validated performance metrics against raw benchmarks.
